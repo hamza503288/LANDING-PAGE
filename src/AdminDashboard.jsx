@@ -12,11 +12,30 @@ export default function AdminDashboard() {
   // Mot de passe très simple pour protéger l'accès
   const handleLogin = (e) => {
     e.preventDefault();
-    if (password === '007hH') {
+    if (password === 'star123') {
       setAuth(true);
       fetchLeads();
     } else {
       alert('Mot de passe incorrect');
+    }
+  };
+
+  const handleTraiter = async (id) => {
+    const nomAgent = window.prompt("Demande traitée par qui ? (Ex: Fares)");
+    if (!nomAgent) return;
+
+    try {
+      const { error } = await supabase
+        .from('client_leads')
+        .update({ status: 'Traité', traite_par: nomAgent })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setLeads(leads.map(lead => lead.id === id ? { ...lead, status: 'Traité', traite_par: nomAgent } : lead));
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour:', err);
+      alert('Erreur lors de la mise à jour du statut.');
     }
   };
 
@@ -38,19 +57,21 @@ export default function AdminDashboard() {
   };
 
   const exportCSV = () => {
-    const headers = ['Date', 'Nom', 'Prénom', 'Téléphone', 'Immatriculation', 'CIN_Matricule', 'Date_Naissance', 'Formule'];
+    const headers = ['Date', 'Nom', 'Prénom', 'Téléphone', 'Immatriculation', 'Puissance_CV', 'Formule', 'Statut', 'Traite_Par'];
     const rows = leads.map(l => [
       new Date(l.created_at).toLocaleString(),
       l.nom,
       l.prenom,
       l.telephone,
       l.immatriculation,
-      l.identifiant,
-      l.date_naissance ? new Date(l.date_naissance).toLocaleDateString() : 'N/A',
-      l.formule
+      l.puissance,
+      l.formule,
+      l.status || 'Nouveau',
+      l.traite_par || ''
     ]);
     
-    let csvContent = "data:text/csv;charset=utf-8," 
+    // Ajout du BOM UTF-8 pour supporter les accents sur Excel
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + headers.join(",") + "\n"
       + rows.map(e => e.join(",")).join("\n");
       
@@ -112,10 +133,10 @@ export default function AdminDashboard() {
                 <th style={{ padding: '1rem' }}>Nom</th>
                 <th style={{ padding: '1rem' }}>Prénom</th>
                 <th style={{ padding: '1rem' }}>Téléphone</th>
-                <th style={{ padding: '1rem' }}>CIN/Matricule</th>
-                <th style={{ padding: '1rem' }}>Date Naiss.</th>
+                <th style={{ padding: '1rem' }}>Puissance (CV)</th>
                 <th style={{ padding: '1rem' }}>Immatriculation</th>
                 <th style={{ padding: '1rem' }}>Formule</th>
+                <th style={{ padding: '1rem' }}>Statut</th>
               </tr>
             </thead>
             <tbody>
@@ -125,13 +146,26 @@ export default function AdminDashboard() {
                   <td style={{ padding: '1rem', fontWeight: 'bold' }}>{lead.nom}</td>
                   <td style={{ padding: '1rem' }}>{lead.prenom}</td>
                   <td style={{ padding: '1rem' }}>{lead.telephone}</td>
-                  <td style={{ padding: '1rem', color: '#64748b' }}>{lead.identifiant}</td>
-                  <td style={{ padding: '1rem' }}>{lead.date_naissance ? new Date(lead.date_naissance).toLocaleDateString() : '-'}</td>
+                  <td style={{ padding: '1rem', color: '#64748b', fontWeight: 'bold' }}>{lead.puissance} CV</td>
                   <td style={{ padding: '1rem' }}>{lead.immatriculation}</td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ background: '#dcfce7', color: '#166534', padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 'bold' }}>
                       {lead.formule.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    {(lead.status === 'Traité') ? (
+                      <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        Traité par {lead.traite_par}
+                      </span>
+                    ) : (
+                      <button 
+                        onClick={() => handleTraiter(lead.id)}
+                        style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '0.25rem 0.75rem', borderRadius: '9999px', cursor: 'pointer', fontSize: '0.875rem', whiteSpace: 'nowrap' }}
+                      >
+                        Marquer Traité
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

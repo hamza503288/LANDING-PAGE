@@ -11,8 +11,7 @@ function App() {
     prenom: '',
     telephone: '',
     immatriculation: '',
-    identifiant: '',
-    dateNaissance: '',
+    puissance: '',
     formule: ''
   });
   const [loading, setLoading] = useState(false);
@@ -36,14 +35,8 @@ function App() {
     setLoading(true);
     
     try {
-      if (!formData.nom || !formData.prenom || !formData.telephone || !formData.immatriculation || !formData.identifiant || !formData.formule || !formData.dateNaissance) {
+      if (!formData.nom || !formData.prenom || !formData.telephone || !formData.immatriculation || !formData.puissance || !formData.formule) {
         toast.error('Veuillez remplir tous les champs !');
-        setLoading(false);
-        return;
-      }
-
-      if (!/^\d{8}$/.test(formData.identifiant)) {
-        toast.error('Le numéro de CIN doit comporter exactement 8 chiffres !');
         setLoading(false);
         return;
       }
@@ -56,8 +49,7 @@ function App() {
             prenom: formData.prenom, 
             telephone: formData.telephone, 
             immatriculation: formData.immatriculation, 
-            identifiant: formData.identifiant,
-            date_naissance: formData.dateNaissance,
+            puissance: formData.puissance,
             formule: formData.formule,
             created_at: new Date().toISOString()
           }
@@ -74,8 +66,7 @@ function App() {
         prenom: '',
         telephone: '',
         immatriculation: '',
-        identifiant: '',
-        dateNaissance: '',
+        puissance: '',
         formule: ''
       });
     } catch (error) {
@@ -162,7 +153,11 @@ function App() {
         <div className="form-wrapper" id="devis-form">
           <div className="form-card">
             <h2>Obtenez votre devis</h2>
-            <p>Remplissez ce formulaire pour profiter de nos remises</p>
+            <p>Remplissez ce formulaire pour profiter de nos remises.</p>
+            <p style={{ color: '#00653B', fontWeight: 'bold', marginBottom: '1.5rem', fontSize: '0.95rem', background: '#ecfdf5', padding: '0.75rem', borderRadius: '8px' }}>
+              <CheckCircle size={16} style={{ display: 'inline-block', verticalAlign: 'text-bottom', marginRight: '5px' }} />
+              Renseignez vos informations pour obtenir votre devis personnalisé en quelques secondes.
+            </p>
             
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -214,33 +209,23 @@ function App() {
                 />
               </div>
               <div className="form-group">
-                <label>N° Carte d'identité (CIN)</label>
+                <label>Puissance du véhicule (en CV)</label>
                 <input 
-                  type="text" 
-                  name="identifiant" 
+                  type="number" 
+                  name="puissance" 
                   className="form-control" 
-                  placeholder="8 chiffres (Ex: 01234567)"
-                  value={formData.identifiant}
+                  placeholder="Ex: 5"
+                  value={formData.puissance}
                   onChange={handleChange}
                   required
-                  maxLength={8}
+                  min="1"
+                  max="99"
                 />
                 <small style={{ color: 'var(--text-light)', fontSize: '0.8rem', display: 'block', marginTop: '0.25rem' }}>
-                  Ce numéro est utilisé seulement pour déterminer votre classe bonus/malus.
+                  Puissance fiscale en chevaux (CV) figurant sur votre carte grise.
                 </small>
               </div>
 
-              <div className="form-group">
-                <label>Date de naissance</label>
-                <input 
-                  type="date" 
-                  name="dateNaissance" 
-                  className="form-control" 
-                  value={formData.dateNaissance}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
               <div className="form-group">
                 <label>Formule souhaitée</label>
                 <select 
